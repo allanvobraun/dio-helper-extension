@@ -1,73 +1,55 @@
-import type { BrowserContext, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { badgeText, openDioLesson, VIDEO_ID } from './pages/dio';
 import { openPopup } from './pages/popup';
 
-// The service worker's `chrome` global, as far as these tests use it.
-declare const chrome: {
-  tabs: { query(query: { active: true }): Promise<{ id?: number }[]> };
+const HIDE = {
+  event: 'command',
+  func: 'setOption',
+  args: ['captions', 'track', {}],
+};
+const SHOW = {
+  event: 'command',
+  func: 'setOption',
+  args: ['captions', 'track', { languageCode: 'pt' }],
 };
 
-/**
- * Browser tab id of `page`. The extension has no `tabs` permission, so tabs
- * can't be queried by URL: bring the page to the front and read the active tab.
- */
-async function tabIdOf(context: BrowserContext, page: Page) {
-  await page.bringToFront();
-  let [serviceWorker] = context.serviceWorkers();
-  if (!serviceWorker) {
-    serviceWorker = await context.waitForEvent('serviceworker');
-  }
-  const tabId = await serviceWorker.evaluate(
-    async () => (await chrome.tabs.query({ active: true }))[0]?.id,
-  );
-  if (tabId === undefined) throw new Error(`No tab found for ${page.url()}`);
-  return tabId;
-}
-
-test('popup reaches the content script on a DIO tab', async ({
+test('opens the lesson video on YouTube where the user stopped', async ({
   context,
   extensionId,
 }) => {
-  const dio = await context.newPage();
-  await dio.route('https://web.dio.me/**', (route) =>
-    route.fulfill({
-      contentType: 'text/html',
-      body: '<html><head><title>Aula stub</title></head><body>stub</body></html>',
-    }),
+  const dio = await openDioLesson(context);
+  const popup = await openPopup(
+    await context.newPage(),
+    extensionId,
+    dio.tabId,
   );
-  const contentReady = dio.waitForEvent('console', {
-    predicate: (msg) => msg.text() === 'Hello content.',
-  });
-  await dio.goto('https://web.dio.me/lesson');
-  await contentReady;
 
-  const tabId = await tabIdOf(context, dio);
-  const popup = await openPopup(await context.newPage(), extensionId, {
-    tabId,
+  const youtube = context.waitForEvent('page', {
+    predicate: (page) => page.url().startsWith('https://www.youtube.com/watch'),
   });
+  await popup.youtubeButton.click();
 
-  // The popup falls back to offsite if the content script doesn't answer.
-  await expect(popup.root).toHaveAttribute('aria-busy', 'false');
-  await expect(popup.courseTitle).toBeVisible();
-  await expect(popup.emptyCard).toBeHidden();
+  await expect(youtube).resolves.toHaveURL(
+    `https://www.youtube.com/watch?v=${VIDEO_ID}&t=78s`,
+  );
 });
 
-test('popup falls back to offsite when no content script answers', async ({
+test('hiding subtitles commands the player and sets the badge', async ({
   context,
   extensionId,
 }) => {
-  const other = await context.newPage();
-  await other.route('https://example.com/**', (route) =>
-    route.fulfill({ contentType: 'text/html', body: '<html></html>' }),
+  const dio = await openDioLesson(context);
+  const popup = await openPopup(
+    await context.newPage(),
+    extensionId,
+    dio.tabId,
   );
-  await other.goto('https://example.com/');
 
-  const tabId = await tabIdOf(context, other);
-  const popup = await openPopup(await context.newPage(), extensionId, {
-    tabId,
-  });
+  await popup.subtitlesSwitch.click();
+  await expect.poll(() => dio.playerCommands()).toContainEqual(HIDE);
+  await expect.poll(() => badgeText(context)).toBe('OFF');
 
-  await expect(popup.root).toHaveAttribute('aria-busy', 'false');
-  await expect(popup.emptyCard).toBeVisible();
-  await expect(popup.youtubeButton).toBeDisabled();
+  await popup.subtitlesSwitch.click();
+  await expect.poll(() => dio.playerCommands()).toContainEqual(SHOW);
+  await expect.poll(() => badgeText(context)).toBe('');
 });

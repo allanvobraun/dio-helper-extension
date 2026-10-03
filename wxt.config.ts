@@ -9,6 +9,7 @@ export default defineConfig({
     name: 'DIO Helper',
     description:
       'Oculte legendas nas aulas da DIO e abra a aula atual no YouTube.',
+    permissions: ['storage'],
   },
   vite: () => ({
     plugins: [tailwindcss()],

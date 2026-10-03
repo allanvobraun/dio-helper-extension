@@ -1,33 +1,27 @@
-import type { Page } from '@playwright/test';
-
-export interface PopupQuery {
-  /** One of the mocked design states (`?state=...`). */
-  state?: string;
-  /** Tab the popup talks to (`?tabId=...`). Without `state`, the popup runs live against it. */
-  tabId?: number;
-}
+import { expect, type Page } from '@playwright/test';
 
 /**
  * Page object for the extension popup. Keeps selectors out of the specs.
- * Opens the mocked `default` design state unless a query is given.
+ * `tabId` is the tab the popup talks to (`?tabId=...`), standing in for the
+ * active tab. Resolves once the popup has finished reading that tab.
  */
 export async function openPopup(
   page: Page,
   extensionId: string,
-  query: PopupQuery = { state: 'default' },
+  tabId: number,
 ) {
-  const params = new URLSearchParams();
-  if (query.state) params.set('state', query.state);
-  if (query.tabId !== undefined) params.set('tabId', String(query.tabId));
-  const search = params.size ? `?${params}` : '';
-  await page.goto(`chrome-extension://${extensionId}/popup.html${search}`);
+  await page.goto(
+    `chrome-extension://${extensionId}/popup.html?tabId=${tabId}`,
+  );
+  const root = page.getByRole('main');
+  await expect(root).toHaveAttribute('aria-busy', 'false');
 
   return {
-    /** `aria-busy` while the popup is checking the active tab. */
-    root: page.getByRole('main'),
+    root,
     heading: page.getByRole('heading', { name: 'DIO Helper' }),
-    courseTitle: page.getByText('Formação Node.js Fundamentals'),
-    progress: page.getByRole('progressbar', { name: 'Progresso do curso' }),
+    lessonTitle: page.getByRole('heading', { level: 2 }),
+    courseTitle: page.getByText('Fundamentos da IA Moderna'),
+    progress: page.getByRole('progressbar', { name: 'Progresso da aula' }),
     emptyCard: page.getByText('Nenhuma aula aberta'),
     goToDio: page.getByRole('button', { name: 'Ir para dio.me' }),
     subtitlesSwitch: page.getByRole('switch', { name: 'Ocultar legendas' }),

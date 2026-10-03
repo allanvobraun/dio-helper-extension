@@ -1,7 +1,7 @@
 export interface Course {
-  title: string;
-  lesson: string;
-  /** Course progress, 0–100. */
+  lessonTitle: string;
+  courseTitle: string | null;
+  /** How much of the lesson video was watched, 0–100. */
   progress: number;
 }
 
@@ -21,12 +21,3 @@ export interface PopupState {
   youtube: YoutubeVideo | null;
   ytStatus: YtStatus;
 }
-
-/** The six states from the design handoff. */
-export type MockScenario =
-  | 'default'
-  | 'off'
-  | 'offsite'
-  | 'noyt'
-  | 'loading'
-  | 'error';

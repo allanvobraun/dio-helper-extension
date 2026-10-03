@@ -35,6 +35,7 @@
 | `pnpm check` | `svelte-check` type and Svelte diagnostics |
 | `pnpm test` | Production build, then Playwright e2e tests against the built extension |
 | `pnpm test:ui` | Same, in Playwright's UI mode |
+| `pnpm test:unit` / `pnpm test:unit:watch` | Vitest unit tests (`src/**/*.test.ts`), once / watch mode |
 | `pnpm biome` | Biome lint + format + import sorting check (`biome check .`), read-only |
 | `pnpm biome:fix` | Apply safe Biome fixes and formatting (`biome check --write .`) |
 | `pnpm lint` / `pnpm format` | Lint only / format only (writes) |
@@ -61,6 +62,11 @@
 - First-time setup on a machine: `pnpm exec playwright install chromium`.
 - Output folders (`test-results/`, `playwright-report/`, `blob-report/`) are gitignored and ignored by Biome.
 
+### Testing: Vitest (unit)
+- **[Vitest](https://wxt.dev/guide/essentials/unit-testing.html)** with WXT's `WxtVitest()` plugin (`vitest.config.ts`). It replaces `browser` with an in-memory fake from `@webext-core/fake-browser` and sets up WXT auto-imports and aliases.
+- Unit tests sit next to the code as `src/**/*.test.ts` (`e2e/*.spec.ts` stays Playwright's). Call `fakeBrowser.reset()` (from `wxt/testing/fake-browser`) in `beforeEach`.
+- Tests run in Node, so stub DOM globals like `location` with `vi.stubGlobal` (see `src/lib/messaging/active-tab.test.ts`).
+
 ### Linting & formatting: Biome
 - **[Biome](https://biomejs.dev)** (`@biomejs/biome`, pinned exact) is the only linter and formatter, so don't add ESLint or Prettier. Config is in `biome.json`.
 - Svelte, HTML and CSS are covered by `html.experimentalFullSupportEnabled` ([HTML super-language support](https://biomejs.dev/internals/language-support/#html-super-languages-support), still experimental). If a Biome rule clearly misfires on Svelte syntax, turn it off for `**/*.svelte` in an `overrides` entry. Don't rewrite correct Svelte code to work around it.
@@ -74,7 +80,7 @@ Before you call a task done, run these from the project root and fix everything 
 
 1. **Lint and format**: run `pnpm biome:fix` to apply formatting and safe fixes, then `pnpm biome`. It must finish with **no errors or warnings**. Fix any remaining lint diagnostics by hand.
 2. **Type and Svelte check**: `pnpm check` (runs `svelte-check --tsconfig ./tsconfig.json`). It must finish with **0 errors and 0 warnings**.
-3. **Tests**: `pnpm test` (builds, then runs the Playwright e2e suite). All tests must pass. When you add or change user-visible behavior (popup/options UI, content script effects, background messaging), add or update a spec in `e2e/`.
+3. **Tests**: `pnpm test:unit` (Vitest) and `pnpm test` (builds, then runs the Playwright e2e suite). All tests must pass. When you add or change user-visible behavior (popup/options UI, content script effects, background messaging), add or update a spec in `e2e/`.
 4. **Build**: `pnpm build`. It must succeed, which confirms WXT can generate the manifest and bundle every entrypoint.
 
 Report the results of these commands to the user. If a step fails and you can't fix it, say so and include the output.

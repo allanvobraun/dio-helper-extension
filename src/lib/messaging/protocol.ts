@@ -1,4 +1,5 @@
 import { defineExtensionMessaging } from '@webext-core/messaging';
+import type { LessonHandler } from '../content/lesson/lesson.handler';
 import type { PageHandler } from '../content/page/page.handler';
 
 /**
@@ -20,6 +21,6 @@ export type ProtocolOf<C> = {
  * inferred from the handler classes in `src/lib/content/<feature>/`.
  * Import them with `import type` so no content-script code reaches the popup.
  */
-export type ContentProtocol = ProtocolOf<PageHandler>;
+export type ContentProtocol = ProtocolOf<PageHandler & LessonHandler>;
 
 export const contentMessenger = defineExtensionMessaging<ContentProtocol>();

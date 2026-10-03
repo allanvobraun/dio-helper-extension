@@ -6,45 +6,41 @@
   import CourseCard from '../../lib/popup/CourseCard.svelte';
   import EmptyCard from '../../lib/popup/EmptyCard.svelte';
   import Header from '../../lib/popup/Header.svelte';
-  import {
-    formatTimestamp,
-    mockPopupState,
-    scenarioFromUrl,
-  } from '../../lib/popup/mock';
   import Notice from '../../lib/popup/Notice.svelte';
   import SubtitlesToggle from '../../lib/popup/SubtitlesToggle.svelte';
+  import {
+    formatTimestamp,
+    toPopupState,
+    youtubeUrl,
+  } from '../../lib/popup/state';
   import YoutubeButton from '../../lib/popup/YoutubeButton.svelte';
+  import { hideSubtitles } from '../../lib/settings';
 
-  const MOCK_OPEN_DELAY_MS = 1400;
+  // The lesson comes from the content script in the active tab, and the
+  // subtitles preference from storage.sync.
+  let popup = $state(toPopupState(null, false));
+  let detecting = $state(true);
 
-  // Preview mode: open popup.html?state=offsite (or off, noyt, loading,
-  // error) to render a fixed mock design state.
-  // Live mode (no ?state=): the lesson/offsite context comes from the content
-  // script in the active tab. TODO: course and YouTube data are still mock.
-  const scenario = scenarioFromUrl();
-  let popup = $state(mockPopupState(scenario ?? 'default'));
-  let detecting = $state(scenario === null);
-
-  async function detectPageContext() {
+  async function loadPopupState() {
     try {
-      await activeTab.getPageInfo();
+      const [lesson, hidden] = await Promise.all([
+        activeTab.getLesson(),
+        hideSubtitles.getValue(),
+      ]);
+      popup = toPopupState(lesson, hidden);
     } catch (error) {
       console.debug(
-        '[popup] active tab is not a DIO page:',
+        '[popup] could not read the lesson in the active tab:',
         error instanceof ContentMessageError ? error.code : error,
       );
-      popup = {
-        ...mockPopupState('offsite'),
-        hideSubtitles: popup.hideSubtitles,
-      };
+      const hidden = await hideSubtitles.getValue().catch(() => false);
+      popup = toPopupState(null, hidden);
     } finally {
       detecting = false;
     }
   }
 
-  if (scenario === null) {
-    detectPageContext();
-  }
+  loadPopupState();
 
   const version = browser.runtime.getManifest().version;
 
@@ -61,18 +57,23 @@
 
   function toggleSubtitles() {
     popup.hideSubtitles = !popup.hideSubtitles;
-    // TODO: persist to storage.sync `hideSubtitles`; the content script
-    // applies it to the player, and the action badge is updated.
+    void hideSubtitles.setValue(popup.hideSubtitles);
   }
 
-  function openOnYoutube() {
+  async function openOnYoutube() {
     popup.ytStatus = 'loading';
-    // TODO: ask the content script for the video id + currentTime, then
-    // browser.tabs.create({ url: `https://www.youtube.com/watch?v=${id}&t=${s}s` })
-    // and close the popup. After a ~5s timeout, set ytStatus to 'error'.
-    setTimeout(() => {
-      popup.ytStatus = 'idle';
-    }, MOCK_OPEN_DELAY_MS);
+    try {
+      const lesson = await activeTab.getLesson();
+      const video = lesson?.video;
+      if (!video) {
+        popup.ytStatus = 'error';
+        return;
+      }
+      await browser.tabs.create({ url: youtubeUrl(video) });
+      window.close();
+    } catch {
+      popup.ytStatus = 'error';
+    }
   }
 
   function goToDio() {

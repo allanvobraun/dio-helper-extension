@@ -1,3 +1,7 @@
+import { syncBadge } from '../lib/badge';
+import { hideSubtitles } from '../lib/settings';
+
 export default defineBackground(() => {
-  console.log('Hello background!', { id: browser.runtime.id });
+  void hideSubtitles.getValue().then(syncBadge);
+  hideSubtitles.watch((hidden) => syncBadge(hidden));
 });
