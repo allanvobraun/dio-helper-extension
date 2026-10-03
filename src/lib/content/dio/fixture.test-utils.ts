@@ -28,17 +28,21 @@ export function lessonPageHtml({
             <div data-duration>${duration}</div>
           </div>
         </div>`;
+  // `#root > div` is DIO's 2×2 grid: header, plan/XP aside, player, lessons.
   return `
     <div id="root">
-      <div><div><div>
-        <span>${LESSON_TITLE}</span>
-        <span>${COURSE_TITLE}</span>
-      </div></div></div>
-      <div>${player}</div>
-      <ul><li><ul>
-        <li id="content-item-${LESSON_ID}"><div><span>${LESSON_TITLE}</span><span>20:11</span></div></li>
-        <li id="content-item-other"><div><span>Entendendo Deep Learning</span><span>15:48</span></div></li>
-      </ul></li></ul>
+      <div>
+        <div><div><div>
+          <span>${LESSON_TITLE}</span>
+          <span>${COURSE_TITLE}</span>
+        </div></div></div>
+        <div><span>BASIC</span><span>XP 40/119</span></div>
+        <div>${player}</div>
+        <ul><li><ul>
+          <li id="content-item-${LESSON_ID}"><div><span>${LESSON_TITLE}</span><span>20:11</span></div></li>
+          <li id="content-item-other"><div><span>Entendendo Deep Learning</span><span>15:48</span></div></li>
+        </ul></li></ul>
+      </div>
       <iframe id="AWIN_CDT" src="about:blank"></iframe>
     </div>`;
 }

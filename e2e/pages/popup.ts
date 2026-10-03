@@ -26,6 +26,8 @@ export async function openPopup(
     goToDio: page.getByRole('button', { name: 'Ir para dio.me' }),
     subtitlesSwitch: page.getByRole('switch', { name: 'Ocultar legendas' }),
     subtitlesHidden: page.getByText('Legendas desativadas em todos os cursos.'),
+    theaterSwitch: page.getByRole('switch', { name: 'Modo teatro' }),
+    theaterOn: page.getByText('Modo teatro ativado.', { exact: false }),
     noVideoNotice: page.getByText(
       'Esta aula não tem uma versão publicada no YouTube.',
     ),

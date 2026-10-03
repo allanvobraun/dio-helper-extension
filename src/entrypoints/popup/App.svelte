@@ -7,34 +7,46 @@
   import EmptyCard from '../../lib/popup/EmptyCard.svelte';
   import Header from '../../lib/popup/Header.svelte';
   import Notice from '../../lib/popup/Notice.svelte';
-  import SubtitlesToggle from '../../lib/popup/SubtitlesToggle.svelte';
+  import SettingSwitch from '../../lib/popup/SettingSwitch.svelte';
   import {
     formatTimestamp,
     toPopupState,
     youtubeUrl,
   } from '../../lib/popup/state';
   import YoutubeButton from '../../lib/popup/YoutubeButton.svelte';
-  import { hideSubtitles } from '../../lib/settings';
+  import { hideSubtitles, theaterMode } from '../../lib/settings';
 
   // The lesson comes from the content script in the active tab, and the
-  // subtitles preference from storage.sync.
-  let popup = $state(toPopupState(null, false));
+  // settings from storage.sync.
+  let popup = $state(
+    toPopupState(null, { hideSubtitles: false, theaterMode: false }),
+  );
   let detecting = $state(true);
 
   async function loadPopupState() {
     try {
-      const [lesson, hidden] = await Promise.all([
+      const [lesson, hidden, theater] = await Promise.all([
         activeTab.getLesson(),
         hideSubtitles.getValue(),
+        theaterMode.getValue(),
       ]);
-      popup = toPopupState(lesson, hidden);
+      popup = toPopupState(lesson, {
+        hideSubtitles: hidden,
+        theaterMode: theater,
+      });
     } catch (error) {
       console.debug(
         '[popup] could not read the lesson in the active tab:',
         error instanceof ContentMessageError ? error.code : error,
       );
-      const hidden = await hideSubtitles.getValue().catch(() => false);
-      popup = toPopupState(null, hidden);
+      const [hidden, theater] = await Promise.all([
+        hideSubtitles.getValue().catch(() => false),
+        theaterMode.getValue().catch(() => false),
+      ]);
+      popup = toPopupState(null, {
+        hideSubtitles: hidden,
+        theaterMode: theater,
+      });
     } finally {
       detecting = false;
     }
@@ -58,6 +70,11 @@
   function toggleSubtitles() {
     popup.hideSubtitles = !popup.hideSubtitles;
     void hideSubtitles.setValue(popup.hideSubtitles);
+  }
+
+  function toggleTheater() {
+    popup.theaterMode = !popup.theaterMode;
+    void theaterMode.setValue(popup.theaterMode);
   }
 
   async function openOnYoutube() {
@@ -93,7 +110,46 @@
     <EmptyCard onGoToDio={goToDio} />
   {/if}
 
-  <SubtitlesToggle checked={popup.hideSubtitles} onToggle={toggleSubtitles} />
+  <SettingSwitch
+    label="Ocultar legendas"
+    description="Em todas as aulas da DIO"
+    checked={popup.hideSubtitles}
+    onToggle={toggleSubtitles}
+    statusText="Legendas desativadas em todos os cursos."
+  >
+    {#snippet icon()}
+      <span
+        class="grid h-5.5 w-7.5 flex-none place-items-center rounded-sm border border-neutral-500 text-xs leading-none font-semibold text-neutral-300"
+        aria-hidden="true"
+      >
+        CC
+      </span>
+    {/snippet}
+  </SettingSwitch>
+
+  <SettingSwitch
+    label="Modo teatro"
+    description="Vídeo em largura total nas aulas"
+    checked={popup.theaterMode}
+    onToggle={toggleTheater}
+    statusText="Modo teatro ativado. Pressione T na aula para alternar."
+  >
+    {#snippet icon()}
+      <svg
+        class="h-5.5 w-7.5 flex-none text-neutral-300"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <rect x="2" y="6" width="20" height="12" rx="2" />
+        <path d="M6 15h12" />
+      </svg>
+    {/snippet}
+  </SettingSwitch>
 
   {#if popup.ytStatus === 'error'}
     <Notice variant="error">

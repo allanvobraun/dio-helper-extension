@@ -7,6 +7,8 @@ import {
   youtubeUrl,
 } from './state';
 
+const SETTINGS = { hideSubtitles: true, theaterMode: false };
+
 const LESSON: Lesson = {
   lessonId: 'abc',
   lessonTitle: 'Como a Inteligência Artificial Nasceu',
@@ -16,9 +18,10 @@ const LESSON: Lesson = {
 
 describe('toPopupState', () => {
   it('maps a lesson to the lesson card and its video', () => {
-    expect(toPopupState(LESSON, true)).toEqual({
+    expect(toPopupState(LESSON, SETTINGS)).toEqual({
       context: 'lesson',
       hideSubtitles: true,
+      theaterMode: false,
       course: {
         lessonTitle: LESSON.lessonTitle,
         courseTitle: LESSON.courseTitle,
@@ -30,15 +33,21 @@ describe('toPopupState', () => {
   });
 
   it('shows the offsite state without a lesson', () => {
-    expect(toPopupState(null, false)).toMatchObject({
+    expect(toPopupState(null, SETTINGS)).toMatchObject({
       context: 'offsite',
       course: null,
       youtube: null,
     });
   });
 
+  it('carries the settings on and off a lesson', () => {
+    const settings = { hideSubtitles: false, theaterMode: true };
+    expect(toPopupState(null, settings)).toMatchObject(settings);
+    expect(toPopupState(LESSON, settings)).toMatchObject(settings);
+  });
+
   it('has no YouTube video and no progress while the video isn’t ready', () => {
-    const state = toPopupState({ ...LESSON, video: null }, false);
+    const state = toPopupState({ ...LESSON, video: null }, SETTINGS);
     expect(state.youtube).toBeNull();
     expect(state.course?.progress).toBe(0);
   });

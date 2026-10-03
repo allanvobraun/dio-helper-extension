@@ -17,6 +17,7 @@ export type YtStatus = 'idle' | 'loading' | 'error';
 export interface PopupState {
   context: PopupContext;
   hideSubtitles: boolean;
+  theaterMode: boolean;
   course: Course | null;
   youtube: YoutubeVideo | null;
   ytStatus: YtStatus;

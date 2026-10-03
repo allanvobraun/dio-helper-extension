@@ -1,28 +1,30 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+
   interface Props {
+    label: string;
+    description: string;
     checked: boolean;
     onToggle: () => void;
+    icon: Snippet;
+    statusText?: string;
   }
 
-  let { checked, onToggle }: Props = $props();
+  let { label, description, checked, onToggle, icon, statusText }: Props =
+    $props();
 </script>
 
 <div class="flex items-center gap-2.5">
-  <span
-    class="grid h-5.5 w-7.5 flex-none place-items-center rounded-sm border border-neutral-500 text-xs leading-none font-semibold text-neutral-300"
-    aria-hidden="true"
-  >
-    CC
-  </span>
+  {@render icon()}
   <div class="min-w-0 flex-1">
-    <p class="text-sm leading-tight">Ocultar legendas</p>
-    <p class="text-xs text-neutral-500">Em todas as aulas da DIO</p>
+    <p class="text-sm leading-tight">{label}</p>
+    <p class="text-xs text-neutral-500">{description}</p>
   </div>
   <button
     type="button"
     role="switch"
     aria-checked={checked}
-    aria-label="Ocultar legendas"
+    aria-label={label}
     class={[
       'relative h-5 w-9 flex-none cursor-pointer rounded-full border p-0 transition-[background-color] duration-150 ease-[ease] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
       checked
@@ -39,8 +41,8 @@
     ></span>
   </button>
 </div>
-{#if checked}
+{#if checked && statusText}
   <p class="-mt-1.5 text-xs text-accent-300" role="status">
-    Legendas desativadas em todos os cursos.
+    {statusText}
   </p>
 {/if}

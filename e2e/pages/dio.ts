@@ -1,4 +1,4 @@
-import type { BrowserContext, Page } from '@playwright/test';
+import type { BrowserContext, Locator, Page } from '@playwright/test';
 
 // The service worker's `chrome` global, as far as these tests use it.
 declare const chrome: {
@@ -21,6 +21,18 @@ export interface LessonStub {
   duration?: string;
 }
 
+/** DIO's lesson grid rules (styled-components on the real page). */
+const LESSON_GRID_CSS = `
+  body { margin: 0; }
+  .grid { display: grid; grid-template-columns: 1fr; background: black; }
+  .grid > * { margin: 0; padding: 0 16px; }
+  .grid > .stage { padding: 0; }
+  [data-player], [data-player] iframe { display: block; width: 100%; height: 360px; border: 0; }
+  @media (min-width: 768px) {
+    .grid { grid-template-columns: 65fr 35fr; grid-template-rows: 4.5rem auto; }
+  }
+`;
+
 /** Mirrors the real DIO lesson page structure (hashed classes omitted). */
 function lessonHtml({
   videoId = VIDEO_ID,
@@ -39,13 +51,17 @@ function lessonHtml({
             <div data-duration>${duration}</div>
           </div>
         </div>`;
-  return `<!doctype html><html><head><meta charset="utf-8" /><title>DIO</title></head><body>
+  return `<!doctype html><html><head><meta charset="utf-8" /><title>DIO</title>
+    <style>${LESSON_GRID_CSS}</style></head><body>
     <div id="root">
-      <div><span>${LESSON_TITLE}</span><span>${COURSE_TITLE}</span></div>
-      <div>${player}</div>
-      <ul><li><ul>
-        <li id="content-item-${LESSON_ID}"><div><span>${LESSON_TITLE}</span><span>20:11</span></div></li>
-      </ul></li></ul>
+      <div class="grid">
+        <div><span>${LESSON_TITLE}</span><span>${COURSE_TITLE}</span></div>
+        <div class="aside">BASIC · XP 40/119</div>
+        <div class="stage">${player}</div>
+        <ul><li><ul>
+          <li id="content-item-${LESSON_ID}"><div><span>${LESSON_TITLE}</span><span>20:11</span></div></li>
+        </ul></li></ul>
+      </div>
     </div>
   </body></html>`;
 }
@@ -84,6 +100,13 @@ export async function openDioLesson(
   return {
     page,
     tabId: await tabIdOf(context, page),
+    /** DIO's right column: the lesson list. */
+    lessonList: page.locator('#root ul').first(),
+    player: page.locator('[data-player]'),
+    /** Rendered width of `locator` in CSS pixels. */
+    async widthOf(locator: Locator) {
+      return (await locator.boundingBox())?.width ?? 0;
+    },
     /** Messages the stub YouTube embed has received, parsed. */
     async playerCommands(): Promise<unknown[]> {
       const frame = page.frame({ url: /youtube\.com\/embed/ });
