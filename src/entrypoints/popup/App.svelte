@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { CaptionOutline, DesktopPcOutline } from 'flowbite-svelte-icons';
   import {
     activeTab,
     ContentMessageError,
@@ -118,12 +119,10 @@
     statusText="Legendas ativadas em todos os cursos."
   >
     {#snippet icon()}
-      <span
-        class="grid h-5.5 w-7.5 flex-none place-items-center rounded-sm border border-neutral-500 text-xs leading-none font-semibold text-neutral-300"
-        aria-hidden="true"
-      >
-        CC
-      </span>
+      <CaptionOutline
+        class="size-5.5 flex-none text-neutral-300"
+        strokeWidth={1.5}
+      />
     {/snippet}
   </SettingSwitch>
 
@@ -135,19 +134,10 @@
     statusText="Modo teatro ativado. Pressione T na aula para alternar."
   >
     {#snippet icon()}
-      <svg
-        class="h-5.5 w-7.5 flex-none text-neutral-300"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
-      >
-        <rect x="2" y="6" width="20" height="12" rx="2" />
-        <path d="M6 15h12" />
-      </svg>
+      <DesktopPcOutline
+        class="size-5.5 flex-none text-neutral-300"
+        strokeWidth={1.5}
+      />
     {/snippet}
   </SettingSwitch>
 

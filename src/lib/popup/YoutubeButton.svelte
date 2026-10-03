@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { YoutubeSolid } from 'flowbite-svelte-icons';
   import type { YtStatus } from './types';
 
   interface Props {
@@ -34,25 +35,7 @@
       aria-hidden="true"
     ></span>
   {:else}
-    <svg
-      width="16"
-      height="12"
-      viewBox="0 0 16 12"
-      class="flex-none"
-      aria-hidden="true"
-    >
-      <rect
-        x=".75"
-        y=".75"
-        width="14.5"
-        height="10.5"
-        rx="3"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.5"
-      />
-      <polygon points="6.5,3.5 10.5,6 6.5,8.5" fill="currentColor" />
-    </svg>
+    <YoutubeSolid class="size-4 flex-none" />
   {/if}
   <span>{label}</span>
   {#if timestamp}

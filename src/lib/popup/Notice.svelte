@@ -1,4 +1,8 @@
 <script lang="ts">
+  import {
+    ExclamationCircleOutline,
+    InfoCircleOutline,
+  } from 'flowbite-svelte-icons';
   import type { Snippet } from 'svelte';
 
   interface Props {
@@ -18,17 +22,11 @@
   ]}
   role={isError ? 'alert' : 'status'}
 >
-  <span
-    class={[
-      'mt-px grid size-4 flex-none place-items-center rounded-full border text-xs leading-none font-bold',
-      isError
-        ? 'border-accent-400 text-accent-400'
-        : 'border-neutral-400 text-neutral-400',
-    ]}
-    aria-hidden="true"
-  >
-    !
-  </span>
+  {#if isError}
+    <ExclamationCircleOutline class="mt-px size-4 flex-none text-accent-400" />
+  {:else}
+    <InfoCircleOutline class="mt-px size-4 flex-none text-neutral-400" />
+  {/if}
   <p class="text-xs leading-normal text-neutral-200">
     {@render children()}
   </p>

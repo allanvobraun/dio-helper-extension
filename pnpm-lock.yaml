@@ -11,6 +11,9 @@ importers:
       '@webext-core/messaging':
         specifier: ^4.0.0
         version: 4.0.0
+      flowbite-svelte-icons:
+        specifier: ^3.1.0
+        version: 3.1.0(svelte@5.57.1)
     devDependencies:
       '@biomejs/biome':
         specifier: 2.5.15
@@ -1150,6 +1153,11 @@ packages:
   flatted@3.4.4:
     resolution: {integrity: sha512-5+ybhBZANEJxaH3X5evAFatUxLfEHSr7n6kYJ+1Qd0mUqr4eu9gIf6GDbWHf8RJijHrjjO8G+la14SlL2SeS1Q==}
 
+  flowbite-svelte-icons@3.1.0:
+    resolution: {integrity: sha512-ZKBFlJY6VbORSo0aHvhqP152/QQN+YKU2upZA6lOkIbTN2vHgENerzd+PnZpLA+os3QbJTG2LKK0l7Zeh1vDBQ==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   fs-extra@11.4.1:
     resolution: {integrity: sha512-KYAb4c9BJQI6QqGKthV68OHe0badztdXJWKo0WtBA9IuCFPTKvE5ZdUBglP833aMjhaSPNO4A5j/EkzZtGlKjA==}
     engines: {node: '>=14.14'}
@@ -2013,6 +2021,9 @@ packages:
   svelte@5.57.1:
     resolution: {integrity: sha512-Uqj49lWKB+iSSnneuwiYYJ7MZgkB+eXr0LXBhv4uDuAkXqnWmq65Sxflfvp0Lc6MdKjMUxGaeOKWJqz5SNiVIA==}
     engines: {node: '>=18'}
+
+  tailwind-merge@3.7.0:
+    resolution: {integrity: sha512-XPPUyAc+cvspz3lHTcR/QgPfW2A0lv/xQNIjX3HGhLR+Nq2lHaLq5MtTesHn8GUr3W3DguT2KT5x3NVgRtYwmA==}
 
   tailwindcss@4.3.3:
     resolution: {integrity: sha512-gOhV3P7ufE62QDGg1zVaTgCR+EtPv92k2nIhVcVKcLmxT1sUBsQGhnZj175j+MqRt4zLF7ic+sCYjfhxMxj7YQ==}
@@ -3355,6 +3366,12 @@ snapshots:
 
   flatted@3.4.4: {}
 
+  flowbite-svelte-icons@3.1.0(svelte@5.57.1):
+    dependencies:
+      clsx: 2.1.1
+      svelte: 5.57.1
+      tailwind-merge: 3.7.0
+
   fs-extra@11.4.1:
     dependencies:
       graceful-fs: 4.2.11
@@ -4158,6 +4175,8 @@ snapshots:
       zimmerframe: 1.1.5
     transitivePeerDependencies:
       - '@typescript-eslint/types'
+
+  tailwind-merge@3.7.0: {}
 
   tailwindcss@4.3.3: {}
 
