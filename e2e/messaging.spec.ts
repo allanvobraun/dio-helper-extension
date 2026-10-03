@@ -34,11 +34,14 @@ test('opens the lesson video on YouTube where the user stopped', async ({
   );
 });
 
-test('hiding subtitles commands the player and sets the badge', async ({
+test('subtitles are off by default and the switch syncs the player and badge', async ({
   context,
   extensionId,
 }) => {
   const dio = await openDioLesson(context);
+  await expect.poll(() => dio.playerCommands()).toEqual([HIDE]);
+  await expect.poll(() => badgeText(context)).toBe('');
+
   const popup = await openPopup(
     await context.newPage(),
     extensionId,
@@ -46,10 +49,10 @@ test('hiding subtitles commands the player and sets the badge', async ({
   );
 
   await popup.subtitlesSwitch.click();
-  await expect.poll(() => dio.playerCommands()).toContainEqual(HIDE);
-  await expect.poll(() => badgeText(context)).toBe('OFF');
+  await expect.poll(() => dio.playerCommands()).toEqual([HIDE, SHOW]);
+  await expect.poll(() => badgeText(context)).toBe('CC');
 
   await popup.subtitlesSwitch.click();
-  await expect.poll(() => dio.playerCommands()).toContainEqual(SHOW);
+  await expect.poll(() => dio.playerCommands()).toEqual([HIDE, SHOW, HIDE]);
   await expect.poll(() => badgeText(context)).toBe('');
 });

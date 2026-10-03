@@ -10,7 +10,7 @@ export function videoProgress({ seconds, duration }: LessonVideo): number {
 /** Popup state for the lesson open in the active tab (null: not on a lesson). */
 export function toPopupState(
   lesson: Lesson | null,
-  settings: Pick<PopupState, 'hideSubtitles' | 'theaterMode'>,
+  settings: Pick<PopupState, 'showSubtitles' | 'theaterMode'>,
 ): PopupState {
   if (!lesson) {
     return {

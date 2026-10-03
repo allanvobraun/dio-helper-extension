@@ -22,17 +22,17 @@ describe('syncBadge', () => {
     };
   }
 
-  it('shows OFF while subtitles are hidden', async () => {
+  it('shows CC while subtitles are on', async () => {
     const action = spyOnAction();
     await syncBadge(true);
 
-    expect(action.text).toHaveBeenCalledWith({ text: 'OFF' });
+    expect(action.text).toHaveBeenCalledWith({ text: 'CC' });
     expect(action.title).toHaveBeenCalledWith({
-      title: 'DIO Helper: legendas ocultas',
+      title: 'DIO Helper: legendas ativadas',
     });
   });
 
-  it('clears the badge when subtitles are shown', async () => {
+  it('clears the badge when subtitles are off', async () => {
     const action = spyOnAction();
     await syncBadge(false);
 

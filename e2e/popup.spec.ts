@@ -27,7 +27,7 @@ test('shows the current lesson and video progress', async ({
   await expect(popup.youtubeButton).toContainText('1:18');
 });
 
-test('subtitles switch is remembered between popups', async ({
+test('subtitles are off by default and the switch is remembered', async ({
   context,
   extensionId,
 }) => {
@@ -36,17 +36,17 @@ test('subtitles switch is remembered between popups', async ({
   let popup = await openPopup(page, extensionId, dio.tabId);
 
   await expect(popup.subtitlesSwitch).toHaveAttribute('aria-checked', 'false');
-  await expect(popup.subtitlesHidden).toBeHidden();
+  await expect(popup.subtitlesOn).toBeHidden();
 
   await popup.subtitlesSwitch.click();
   await expect(popup.subtitlesSwitch).toHaveAttribute('aria-checked', 'true');
-  await expect(popup.subtitlesHidden).toBeVisible();
+  await expect(popup.subtitlesOn).toBeVisible();
 
   popup = await openPopup(page, extensionId, dio.tabId);
   await expect(popup.subtitlesSwitch).toHaveAttribute('aria-checked', 'true');
 
   await popup.subtitlesSwitch.click();
-  await expect(popup.subtitlesHidden).toBeHidden();
+  await expect(popup.subtitlesOn).toBeHidden();
 });
 
 test('off DIO shows the empty card and disables YouTube', async ({

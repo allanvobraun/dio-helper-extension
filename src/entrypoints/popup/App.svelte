@@ -14,24 +14,24 @@
     youtubeUrl,
   } from '../../lib/popup/state';
   import YoutubeButton from '../../lib/popup/YoutubeButton.svelte';
-  import { hideSubtitles, theaterMode } from '../../lib/settings';
+  import { showSubtitles, theaterMode } from '../../lib/settings';
 
   // The lesson comes from the content script in the active tab, and the
   // settings from storage.sync.
   let popup = $state(
-    toPopupState(null, { hideSubtitles: false, theaterMode: false }),
+    toPopupState(null, { showSubtitles: false, theaterMode: false }),
   );
   let detecting = $state(true);
 
   async function loadPopupState() {
     try {
-      const [lesson, hidden, theater] = await Promise.all([
+      const [lesson, shown, theater] = await Promise.all([
         activeTab.getLesson(),
-        hideSubtitles.getValue(),
+        showSubtitles.getValue(),
         theaterMode.getValue(),
       ]);
       popup = toPopupState(lesson, {
-        hideSubtitles: hidden,
+        showSubtitles: shown,
         theaterMode: theater,
       });
     } catch (error) {
@@ -39,12 +39,12 @@
         '[popup] could not read the lesson in the active tab:',
         error instanceof ContentMessageError ? error.code : error,
       );
-      const [hidden, theater] = await Promise.all([
-        hideSubtitles.getValue().catch(() => false),
+      const [shown, theater] = await Promise.all([
+        showSubtitles.getValue().catch(() => false),
         theaterMode.getValue().catch(() => false),
       ]);
       popup = toPopupState(null, {
-        hideSubtitles: hidden,
+        showSubtitles: shown,
         theaterMode: theater,
       });
     } finally {
@@ -68,8 +68,8 @@
   );
 
   function toggleSubtitles() {
-    popup.hideSubtitles = !popup.hideSubtitles;
-    void hideSubtitles.setValue(popup.hideSubtitles);
+    popup.showSubtitles = !popup.showSubtitles;
+    void showSubtitles.setValue(popup.showSubtitles);
   }
 
   function toggleTheater() {
@@ -111,11 +111,11 @@
   {/if}
 
   <SettingSwitch
-    label="Ocultar legendas"
-    description="Em todas as aulas da DIO"
-    checked={popup.hideSubtitles}
+    label="Legendas"
+    description="Desativadas por padrão em todas as aulas"
+    checked={popup.showSubtitles}
     onToggle={toggleSubtitles}
-    statusText="Legendas desativadas em todos os cursos."
+    statusText="Legendas ativadas em todos os cursos."
   >
     {#snippet icon()}
       <span

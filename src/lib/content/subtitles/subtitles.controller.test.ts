@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
-import { hideSubtitles } from '../../settings';
+import { showSubtitles } from '../../settings';
 import { CAPTIONS_TRACK, SubtitlesController } from './subtitles.controller';
 
 const HIDE = ['captions', 'track', {}];
@@ -50,44 +50,47 @@ describe('SubtitlesController', () => {
     document.body.innerHTML = '';
   });
 
-  it('does nothing when subtitles are shown at startup', async () => {
+  it('turns captions off on the current player by default', async () => {
     const player = fakePlayer();
     new SubtitlesController(player);
     await settle();
 
-    expect(player.command).not.toHaveBeenCalled();
+    expect(player.command.mock.calls).toEqual([
+      [player.iframe, 'setOption', HIDE],
+    ]);
   });
 
-  it('hides captions on the current player at startup', async () => {
-    await hideSubtitles.setValue(true);
+  it('turns captions on at startup when the user chose them', async () => {
+    await showSubtitles.setValue(true);
     const player = fakePlayer();
     new SubtitlesController(player);
     await settle();
 
-    expect(player.command).toHaveBeenCalledWith(
+    expect(player.command).toHaveBeenLastCalledWith(
       player.iframe,
       'setOption',
-      HIDE,
+      SHOW,
     );
   });
 
-  it('hides captions when the setting is turned on', async () => {
+  it('follows the setting both ways', async () => {
     const player = fakePlayer();
     new SubtitlesController(player);
     await settle();
+    player.command.mockClear();
 
-    await hideSubtitles.setValue(true);
+    await showSubtitles.setValue(true);
+    await settle();
+    await showSubtitles.setValue(false);
     await settle();
 
-    expect(player.command).toHaveBeenCalledWith(
-      player.iframe,
-      'setOption',
-      HIDE,
-    );
+    expect(player.command.mock.calls).toEqual([
+      [player.iframe, 'setOption', SHOW],
+      [player.iframe, 'setOption', HIDE],
+    ]);
   });
 
-  it('hides captions on new players and again on their first play', async () => {
-    await hideSubtitles.setValue(true);
+  it('syncs new players, and again on their first play', async () => {
     const player = fakePlayer();
     new SubtitlesController(player);
     await settle();
@@ -105,28 +108,21 @@ describe('SubtitlesController', () => {
     ]);
   });
 
-  it('restores captions only on players it hid', async () => {
+  it('syncs every player still on the page when the setting changes', async () => {
     const player = fakePlayer();
     new SubtitlesController(player);
     await settle();
-    const hidden = player.iframe;
+    const first = player.iframe;
+    const next = document.createElement('iframe');
+    document.body.append(next);
+    player.emitNewPlayer(next);
+    first.remove();
+    player.command.mockClear();
 
-    await hideSubtitles.setValue(true);
+    await showSubtitles.setValue(true);
     await settle();
-    // A player that appears while subtitles are shown is never touched.
-    const later = document.createElement('iframe');
-    document.body.append(later);
-    await hideSubtitles.setValue(false);
-    await settle();
-    player.emitNewPlayer(later);
 
-    const calls = player.command.mock.calls;
-    expect(calls).toHaveLength(2);
-    expect(calls.every(([target]) => target === hidden)).toBe(true);
-    expect(calls.map(([, func, args]) => [func, args])).toEqual([
-      ['setOption', HIDE],
-      ['setOption', SHOW],
-    ]);
+    expect(player.command.mock.calls).toEqual([[next, 'setOption', SHOW]]);
   });
 
   it('stops reacting after dispose', async () => {
@@ -134,9 +130,11 @@ describe('SubtitlesController', () => {
     const controller = new SubtitlesController(player);
     await settle();
     controller.dispose();
+    player.command.mockClear();
 
-    await hideSubtitles.setValue(true);
+    await showSubtitles.setValue(true);
     await settle();
+    player.emitPlaying(player.iframe);
 
     expect(player.command).not.toHaveBeenCalled();
   });

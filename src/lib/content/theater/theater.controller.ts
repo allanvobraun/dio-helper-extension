@@ -1,10 +1,7 @@
-import { theaterMode } from '../../settings';
+import { onSetting, type Setting, theaterMode } from '../../settings';
 import { THEATER_ATTR, THEATER_CSS, THEATER_STYLE_ID } from './theater.styles';
 
-type TheaterSetting = Pick<
-  typeof theaterMode,
-  'getValue' | 'watch' | 'setValue'
->;
+type TheaterSetting = Setting<boolean> & Pick<typeof theaterMode, 'setValue'>;
 
 /** Keyboard shortcut, as on YouTube. */
 export const THEATER_KEY = 't';
@@ -32,9 +29,8 @@ export class TheaterController {
     this.#style.textContent = THEATER_CSS;
     doc.head.append(this.#style);
 
-    this.#unwatch = setting.watch((on) => this.#apply(on));
+    this.#unwatch = onSetting(setting, (on) => this.#apply(on));
     doc.addEventListener('keydown', this.#onKeydown);
-    void setting.getValue().then((on) => this.#apply(on));
   }
 
   dispose() {

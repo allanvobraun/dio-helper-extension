@@ -7,7 +7,7 @@ import {
   youtubeUrl,
 } from './state';
 
-const SETTINGS = { hideSubtitles: true, theaterMode: false };
+const SETTINGS = { showSubtitles: true, theaterMode: false };
 
 const LESSON: Lesson = {
   lessonId: 'abc',
@@ -20,7 +20,7 @@ describe('toPopupState', () => {
   it('maps a lesson to the lesson card and its video', () => {
     expect(toPopupState(LESSON, SETTINGS)).toEqual({
       context: 'lesson',
-      hideSubtitles: true,
+      showSubtitles: true,
       theaterMode: false,
       course: {
         lessonTitle: LESSON.lessonTitle,
@@ -41,7 +41,7 @@ describe('toPopupState', () => {
   });
 
   it('carries the settings on and off a lesson', () => {
-    const settings = { hideSubtitles: false, theaterMode: true };
+    const settings = { showSubtitles: false, theaterMode: true };
     expect(toPopupState(null, settings)).toMatchObject(settings);
     expect(toPopupState(LESSON, settings)).toMatchObject(settings);
   });

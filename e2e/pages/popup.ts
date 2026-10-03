@@ -24,8 +24,8 @@ export async function openPopup(
     progress: page.getByRole('progressbar', { name: 'Progresso da aula' }),
     emptyCard: page.getByText('Nenhuma aula aberta'),
     goToDio: page.getByRole('button', { name: 'Ir para dio.me' }),
-    subtitlesSwitch: page.getByRole('switch', { name: 'Ocultar legendas' }),
-    subtitlesHidden: page.getByText('Legendas desativadas em todos os cursos.'),
+    subtitlesSwitch: page.getByRole('switch', { name: 'Legendas' }),
+    subtitlesOn: page.getByText('Legendas ativadas em todos os cursos.'),
     theaterSwitch: page.getByRole('switch', { name: 'Modo teatro' }),
     theaterOn: page.getByText('Modo teatro ativado.', { exact: false }),
     noVideoNotice: page.getByText(
