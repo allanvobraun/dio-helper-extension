@@ -1,0 +1,1 @@
+{"version":3,"file":"_page.svelte.js","names":["$.attr"],"sources":["../../../../../../src/routes/demo/+page.svelte"],"sourcesContent":["<script lang=\"ts\">\n\timport { resolve } from '$app/paths';\n</script>\n\n<a href={resolve('/demo/playwright')}>playwright</a>\n"],"mappings":";;;;CAAA,WAAA,WAAA,eAAA;EAIS,WAAA,KAAA,KAAAA,KAAA,QAAA,QAAQ,kBAAkB,CAAC,EAAA,gBAAA;CAF5B,CAAA"}

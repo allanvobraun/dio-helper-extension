@@ -1,0 +1,12 @@
+{
+	"/": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/demo": [
+		"src/routes/+layout.ts"
+	],
+	"/demo/playwright": [
+		"src/routes/+layout.ts"
+	]
+}
