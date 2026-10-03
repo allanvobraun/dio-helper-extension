@@ -1,4 +1,8 @@
 <script lang="ts">
+  import {
+    activeTab,
+    ContentMessageError,
+  } from '../../lib/messaging/active-tab';
   import CourseCard from '../../lib/popup/CourseCard.svelte';
   import EmptyCard from '../../lib/popup/EmptyCard.svelte';
   import Header from '../../lib/popup/Header.svelte';
@@ -13,9 +17,34 @@
 
   const MOCK_OPEN_DELAY_MS = 1400;
 
-  // Open popup.html?state=offsite (or off, noyt, loading, error) to preview
-  // each design state. TODO: load the real state instead of mock data.
-  let popup = $state(mockPopupState(scenarioFromUrl()));
+  // Preview mode: open popup.html?state=offsite (or off, noyt, loading,
+  // error) to render a fixed mock design state.
+  // Live mode (no ?state=): the lesson/offsite context comes from the content
+  // script in the active tab. TODO: course and YouTube data are still mock.
+  const scenario = scenarioFromUrl();
+  let popup = $state(mockPopupState(scenario ?? 'default'));
+  let detecting = $state(scenario === null);
+
+  async function detectPageContext() {
+    try {
+      await activeTab.getPageInfo();
+    } catch (error) {
+      console.debug(
+        '[popup] active tab is not a DIO page:',
+        error instanceof ContentMessageError ? error.code : error,
+      );
+      popup = {
+        ...mockPopupState('offsite'),
+        hideSubtitles: popup.hideSubtitles,
+      };
+    } finally {
+      detecting = false;
+    }
+  }
+
+  if (scenario === null) {
+    detectPageContext();
+  }
 
   const version = browser.runtime.getManifest().version;
 
@@ -51,7 +80,10 @@
   }
 </script>
 
-<main class="flex w-80 flex-col gap-3.5 bg-bg p-3.5 font-sans text-text">
+<main
+  class="flex w-80 flex-col gap-3.5 bg-bg p-3.5 font-sans text-text"
+  aria-busy={detecting}
+>
   <Header {version} />
 
   {#if onLesson && popup.course}

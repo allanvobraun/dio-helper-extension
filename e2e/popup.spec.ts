@@ -32,7 +32,7 @@ test('off DIO shows the empty card and disables YouTube', async ({
   page,
   extensionId,
 }) => {
-  const popup = await openPopup(page, extensionId, 'offsite');
+  const popup = await openPopup(page, extensionId, { state: 'offsite' });
 
   await expect(popup.emptyCard).toBeVisible();
   await expect(popup.goToDio).toBeVisible();
@@ -44,7 +44,7 @@ test('lesson without a YouTube video shows a notice', async ({
   page,
   extensionId,
 }) => {
-  const popup = await openPopup(page, extensionId, 'noyt');
+  const popup = await openPopup(page, extensionId, { state: 'noyt' });
 
   await expect(popup.noVideoNotice).toBeVisible();
   await expect(popup.youtubeButton).toBeDisabled();
@@ -62,7 +62,7 @@ test('opening in YouTube shows the loading state', async ({
 });
 
 test('error state offers a retry', async ({ page, extensionId }) => {
-  const popup = await openPopup(page, extensionId, 'error');
+  const popup = await openPopup(page, extensionId, { state: 'error' });
 
   await expect(popup.errorNotice).toBeVisible();
   await expect(popup.youtubeButton).toHaveText(/Tentar novamente/);

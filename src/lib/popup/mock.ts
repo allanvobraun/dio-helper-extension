@@ -21,9 +21,13 @@ const SCENARIOS: readonly MockScenario[] = [
   'error',
 ];
 
-/** Reads `?state=<scenario>` from the popup URL so every design state can be previewed. */
-export function scenarioFromUrl(search = location.search): MockScenario {
+/**
+ * Reads `?state=<scenario>` from the popup URL so every design state can be
+ * previewed. Returns null without the param (live mode: ask the active tab).
+ */
+export function scenarioFromUrl(search = location.search): MockScenario | null {
   const value = new URLSearchParams(search).get('state');
+  if (value === null) return null;
   return SCENARIOS.find((s) => s === value) ?? 'default';
 }
 

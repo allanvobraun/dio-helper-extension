@@ -36,5 +36,8 @@
     "web-ext": "^10.5.0",
     "wxt": "^0.21.3"
   },
-  "packageManager": "pnpm@11.28.2"
+  "packageManager": "pnpm@11.28.2",
+  "dependencies": {
+    "@webext-core/messaging": "^4.0.0"
+  }
 }
