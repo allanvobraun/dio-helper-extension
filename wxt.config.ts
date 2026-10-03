@@ -5,6 +5,11 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   srcDir: 'src',
   modules: ['@wxt-dev/module-svelte'],
+  manifest: {
+    name: 'DIO Helper',
+    description:
+      'Oculte legendas nas aulas da DIO e abra a aula atual no YouTube.',
+  },
   vite: () => ({
     plugins: [tailwindcss()],
   }),

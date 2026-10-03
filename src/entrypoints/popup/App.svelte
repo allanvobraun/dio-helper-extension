@@ -1,40 +1,81 @@
 <script lang="ts">
-  import svelteLogo from '../../assets/svelte.svg';
-  import Counter from '../../lib/Counter.svelte';
+  import CourseCard from '../../lib/popup/CourseCard.svelte';
+  import EmptyCard from '../../lib/popup/EmptyCard.svelte';
+  import Header from '../../lib/popup/Header.svelte';
+  import {
+    formatTimestamp,
+    mockPopupState,
+    scenarioFromUrl,
+  } from '../../lib/popup/mock';
+  import Notice from '../../lib/popup/Notice.svelte';
+  import SubtitlesToggle from '../../lib/popup/SubtitlesToggle.svelte';
+  import YoutubeButton from '../../lib/popup/YoutubeButton.svelte';
+
+  const MOCK_OPEN_DELAY_MS = 1400;
+
+  // Open popup.html?state=offsite (or off, noyt, loading, error) to preview
+  // each design state. TODO: load the real state instead of mock data.
+  let popup = $state(mockPopupState(scenarioFromUrl()));
+
+  const version = browser.runtime.getManifest().version;
+
+  const onLesson = $derived(popup.context === 'lesson');
+  const noYoutube = $derived(onLesson && popup.youtube === null);
+  const timestamp = $derived(
+    popup.youtube && popup.ytStatus !== 'error'
+      ? formatTimestamp(popup.youtube.seconds)
+      : null,
+  );
+  const ytDisabled = $derived(
+    !onLesson || popup.youtube === null || popup.ytStatus === 'loading',
+  );
+
+  function toggleSubtitles() {
+    popup.hideSubtitles = !popup.hideSubtitles;
+    // TODO: persist to storage.sync `hideSubtitles`; the content script
+    // applies it to the player, and the action badge is updated.
+  }
+
+  function openOnYoutube() {
+    popup.ytStatus = 'loading';
+    // TODO: ask the content script for the video id + currentTime, then
+    // browser.tabs.create({ url: `https://www.youtube.com/watch?v=${id}&t=${s}s` })
+    // and close the popup. After a ~5s timeout, set ytStatus to 'error'.
+    setTimeout(() => {
+      popup.ytStatus = 'idle';
+    }, MOCK_OPEN_DELAY_MS);
+  }
+
+  function goToDio() {
+    browser.tabs.create({ url: 'https://web.dio.me' });
+  }
 </script>
 
-<main>
-  <div>
-    <a href="https://wxt.dev" target="_blank" rel="noreferrer">
-      <img src="/wxt.svg" class="logo" alt="WXT Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>WXT + Svelte</h1>
+<main class="flex w-80 flex-col gap-3.5 bg-bg p-3.5 font-sans text-text">
+  <Header {version} />
 
-  <div class="card">
-    <Counter />
-  </div>
+  {#if onLesson && popup.course}
+    <CourseCard course={popup.course} />
+  {:else}
+    <EmptyCard onGoToDio={goToDio} />
+  {/if}
 
-  <p class="read-the-docs">Click on the WXT and Svelte logos to learn more</p>
+  <SubtitlesToggle checked={popup.hideSubtitles} onToggle={toggleSubtitles} />
+
+  {#if popup.ytStatus === 'error'}
+    <Notice variant="error">
+      Não encontramos o vídeo no YouTube. Verifique sua conexão e tente de novo.
+    </Notice>
+  {:else if noYoutube}
+    <Notice variant="neutral">
+      Esta aula não tem uma versão publicada no YouTube.
+    </Notice>
+  {/if}
+
+  <YoutubeButton
+    status={popup.ytStatus}
+    {timestamp}
+    disabled={ytDisabled}
+    onclick={openOnYoutube}
+  />
 </main>
-
-<style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #54bc4ae0);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
-</style>
