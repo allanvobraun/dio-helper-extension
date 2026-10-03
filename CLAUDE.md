@@ -33,14 +33,25 @@
 | `pnpm build` / `pnpm build:firefox` | Production build into `.output/` |
 | `pnpm zip` / `pnpm zip:firefox` | Package for store upload |
 | `pnpm check` | `svelte-check` type and Svelte diagnostics |
+| `pnpm biome` | Biome lint + format + import sorting check (`biome check .`), read-only |
+| `pnpm biome:fix` | Apply safe Biome fixes and formatting (`biome check --write .`) |
+| `pnpm lint` / `pnpm format` | Lint only / format only (writes) |
+
+### Linting & formatting: Biome
+- **[Biome](https://biomejs.dev)** (`@biomejs/biome`, pinned exact) is the only linter and formatter, so don't add ESLint or Prettier. Config is in `biome.json`.
+- Svelte, HTML and CSS are covered by `html.experimentalFullSupportEnabled` ([HTML super-language support](https://biomejs.dev/internals/language-support/#html-super-languages-support), still experimental). If a Biome rule clearly misfires on Svelte syntax, turn it off for `**/*.svelte` in an `overrides` entry. Don't rewrite correct Svelte code to work around it.
+- Style: 2-space indent, single quotes, semicolons, `<script>`/`<style>` content indented, and void elements self-closed (`<meta />`).
+- Ignored: `node_modules`, `.output`, `.wxt`, `.svelte-kit`, `pnpm-lock.yaml`, `*.svg`.
+- Recommended preset rules are on. Fix the underlying problem instead of adding `biome-ignore` comments. If an ignore really is needed, include a reason (`// biome-ignore lint/<group>/<rule>: <reason>`).
 
 ## Validating changes (run after every feature or fix)
 
 Before you call a task done, run these from the project root and fix everything they report:
 
-1. **Type and Svelte check**: `pnpm check` (runs `svelte-check --tsconfig ./tsconfig.json`). It must finish with **0 errors and 0 warnings**.
-2. **Tests, if available**: check `package.json` for a `test` script (none exists yet). If there is one, run `pnpm test` (in non-watch mode, e.g. `pnpm test --run` for Vitest) and make sure it passes. If you added logic that is worth testing and a test setup exists, add or update tests.
-3. **Build**: `pnpm build`. It must succeed, which confirms WXT can generate the manifest and bundle every entrypoint.
+1. **Lint and format**: run `pnpm biome:fix` to apply formatting and safe fixes, then `pnpm biome`. It must finish with **no errors or warnings**. Fix any remaining lint diagnostics by hand.
+2. **Type and Svelte check**: `pnpm check` (runs `svelte-check --tsconfig ./tsconfig.json`). It must finish with **0 errors and 0 warnings**.
+3. **Tests, if available**: check `package.json` for a `test` script (none exists yet). If there is one, run `pnpm test` (in non-watch mode, e.g. `pnpm test --run` for Vitest) and make sure it passes. If you added logic that is worth testing and a test setup exists, add or update tests.
+4. **Build**: `pnpm build`. It must succeed, which confirms WXT can generate the manifest and bundle every entrypoint.
 
 Report the results of these commands to the user. If a step fails and you can't fix it, say so and include the output.
 
@@ -96,4 +107,4 @@ Load the **`svelte-core-bestpractices`** skill whenever writing or analyzing Sve
 - [ ] Relevant docs were fetched with `get-documentation`.
 - [ ] `svelte-autofixer` reports no issues or suggestions.
 - [ ] No Svelte 4 / legacy syntax introduced.
-- [ ] `pnpm check` passes, tests pass (if a test script exists), and `pnpm build` succeeds (see "Validating changes").
+- [ ] `pnpm biome` is clean, `pnpm check` passes, tests pass (if a test script exists), and `pnpm build` succeeds (see "Validating changes").
