@@ -11,6 +11,9 @@
       "!**/.output",
       "!**/.wxt",
       "!**/.svelte-kit",
+      "!**/test-results",
+      "!**/playwright-report",
+      "!**/blob-report",
       "!**/pnpm-lock.yaml",
       "!**/*.svg"
     ]

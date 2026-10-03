@@ -33,6 +33,8 @@
 | `pnpm build` / `pnpm build:firefox` | Production build into `.output/` |
 | `pnpm zip` / `pnpm zip:firefox` | Package for store upload |
 | `pnpm check` | `svelte-check` type and Svelte diagnostics |
+| `pnpm test` | Production build, then Playwright e2e tests against the built extension |
+| `pnpm test:ui` | Same, in Playwright's UI mode |
 | `pnpm biome` | Biome lint + format + import sorting check (`biome check .`), read-only |
 | `pnpm biome:fix` | Apply safe Biome fixes and formatting (`biome check --write .`) |
 | `pnpm lint` / `pnpm format` | Lint only / format only (writes) |
@@ -45,6 +47,18 @@
 - A Svelte `<style>` block that uses `@apply` or `theme()` must start with `@reference '../path/to/app.css';` (Tailwind v4 processes each `<style>` block on its own).
 - **Content scripts**: don't import the Tailwind stylesheet directly into a page. Preflight would reset the host site's styles. Use WXT's `createShadowRootUi` with `cssInjectionMode: 'ui'` so the styles stay inside a shadow root.
 - Biome parses Tailwind directives (`@theme`, `@apply`, `@reference`, …) through `css.parser.tailwindDirectives: true` in `biome.json`.
+
+### Testing: Playwright (e2e)
+- **[Playwright](https://playwright.dev/docs/chrome-extensions)** (`@playwright/test`) loads the real built extension into Chromium. Config is in `playwright.config.ts`, tests are in `e2e/*.spec.ts`.
+- Tests run against `.output/chrome-mv3`, so `pnpm test` runs `wxt build` first. Calling `playwright test` alone uses whatever build is already there, which may be stale.
+- Always import `test` / `expect` from `e2e/fixtures.ts`, not from `@playwright/test`. The fixtures launch a persistent context with the extension loaded (extensions only work in persistent contexts) and provide an `extensionId` fixture taken from the MV3 service worker URL.
+- Keep `channel: 'chromium'` in the fixture. Headless extension loading only works with Playwright's bundled Chromium; branded Chrome/Edge removed the side-loading flags.
+- Put selectors for each extension page in a page object under `e2e/pages/` (see `e2e/pages/popup.ts`, which returns Playwright locators) and keep the specs to actions and assertions. Use locators and web-first assertions (`await expect(locator).toHaveText(...)`), not `waitForSelector` or element handles.
+- Extension pages: ``page.goto(`chrome-extension://${extensionId}/popup.html`)`` (same for `options.html`, `sidepanel.html`, …).
+- Content scripts: stub the target site with `page.route(...)` + `route.fulfill(...)` so tests don't hit the network. Content scripts still inject on fulfilled responses (see `e2e/content.spec.ts`).
+- Background: reach the service worker through `context.serviceWorkers()` / `context.waitForEvent('serviceworker')` and use `serviceWorker.evaluate(...)`. MV3 workers suspend after ~30s idle, and an `evaluate` in flight then throws "Service worker restarted".
+- First-time setup on a machine: `pnpm exec playwright install chromium`.
+- Output folders (`test-results/`, `playwright-report/`, `blob-report/`) are gitignored and ignored by Biome.
 
 ### Linting & formatting: Biome
 - **[Biome](https://biomejs.dev)** (`@biomejs/biome`, pinned exact) is the only linter and formatter, so don't add ESLint or Prettier. Config is in `biome.json`.
@@ -59,7 +73,7 @@ Before you call a task done, run these from the project root and fix everything 
 
 1. **Lint and format**: run `pnpm biome:fix` to apply formatting and safe fixes, then `pnpm biome`. It must finish with **no errors or warnings**. Fix any remaining lint diagnostics by hand.
 2. **Type and Svelte check**: `pnpm check` (runs `svelte-check --tsconfig ./tsconfig.json`). It must finish with **0 errors and 0 warnings**.
-3. **Tests, if available**: check `package.json` for a `test` script (none exists yet). If there is one, run `pnpm test` (in non-watch mode, e.g. `pnpm test --run` for Vitest) and make sure it passes. If you added logic that is worth testing and a test setup exists, add or update tests.
+3. **Tests**: `pnpm test` (builds, then runs the Playwright e2e suite). All tests must pass. When you add or change user-visible behavior (popup/options UI, content script effects, background messaging), add or update a spec in `e2e/`.
 4. **Build**: `pnpm build`. It must succeed, which confirms WXT can generate the manifest and bundle every entrypoint.
 
 Report the results of these commands to the user. If a step fails and you can't fix it, say so and include the output.
@@ -116,4 +130,4 @@ Load the **`svelte-core-bestpractices`** skill whenever writing or analyzing Sve
 - [ ] Relevant docs were fetched with `get-documentation`.
 - [ ] `svelte-autofixer` reports no issues or suggestions.
 - [ ] No Svelte 4 / legacy syntax introduced.
-- [ ] `pnpm biome` is clean, `pnpm check` passes, tests pass (if a test script exists), and `pnpm build` succeeds (see "Validating changes").
+- [ ] `pnpm biome` is clean, `pnpm check` passes, `pnpm test` passes, and `pnpm build` succeeds (see "Validating changes").
