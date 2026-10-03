@@ -37,6 +37,15 @@
 | `pnpm biome:fix` | Apply safe Biome fixes and formatting (`biome check --write .`) |
 | `pnpm lint` / `pnpm format` | Lint only / format only (writes) |
 
+### Styling: Tailwind CSS v4
+- **[Tailwind CSS v4](https://tailwindcss.com)** is installed through the Vite plugin (`tailwindcss` + `@tailwindcss/vite`), registered in `wxt.config.ts` under `vite: () => ({ plugins: [tailwindcss()] })`. There's no `tailwind.config.js` and no PostCSS config. v4 is CSS-first, so don't add them.
+- The stylesheet entry for each UI entrypoint does `@import 'tailwindcss';` (popup: `src/entrypoints/popup/app.css`, imported in `main.ts`). A new UI entrypoint (options, sidepanel, …) needs its own CSS file with that import, imported from its `main.ts`.
+- Theme customization (colors, fonts, breakpoints) goes in an `@theme { ... }` block in CSS, not in JS config.
+- Prefer utility classes in Svelte markup. Custom global CSS goes inside `@layer base` / `@layer components`. Unlayered CSS beats every Tailwind utility regardless of specificity, so the popup starter styles are wrapped in `@layer base`.
+- A Svelte `<style>` block that uses `@apply` or `theme()` must start with `@reference '../path/to/app.css';` (Tailwind v4 processes each `<style>` block on its own).
+- **Content scripts**: don't import the Tailwind stylesheet directly into a page. Preflight would reset the host site's styles. Use WXT's `createShadowRootUi` with `cssInjectionMode: 'ui'` so the styles stay inside a shadow root.
+- Biome parses Tailwind directives (`@theme`, `@apply`, `@reference`, …) through `css.parser.tailwindDirectives: true` in `biome.json`.
+
 ### Linting & formatting: Biome
 - **[Biome](https://biomejs.dev)** (`@biomejs/biome`, pinned exact) is the only linter and formatter, so don't add ESLint or Prettier. Config is in `biome.json`.
 - Svelte, HTML and CSS are covered by `html.experimentalFullSupportEnabled` ([HTML super-language support](https://biomejs.dev/internals/language-support/#html-super-languages-support), still experimental). If a Biome rule clearly misfires on Svelte syntax, turn it off for `**/*.svelte` in an `overrides` entry. Don't rewrite correct Svelte code to work around it.
